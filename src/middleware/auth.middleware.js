@@ -31,4 +31,16 @@ const protectRoute = async (req, res, next) => {
   }
 };
 
-export default protectRoute;
+const adminRoute = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied. Admin only." });
+    }
+    next();
+  } catch (error) {
+    console.error("Admin auth error:", error.message);
+    res.status(403).json({ message: "Access denied" });
+  }
+};
+
+export { protectRoute, adminRoute };

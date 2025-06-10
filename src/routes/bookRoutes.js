@@ -41,7 +41,7 @@ router.get("/", protectRoute, async (req, res) => {
   // const response = await fetch("http://localhost:3000/api/books?page=1&limit=5");
   try {
     const page = req.query.page || 1;
-    const limit = req.query.limit || 5;
+    const limit = req.query.limit || 2;
     const skip = (page - 1) * limit;
 
     const books = await Book.find()
@@ -101,6 +101,31 @@ router.delete("/:id", protectRoute, async (req, res) => {
   } catch (error) {
     console.log("Error deleting book", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Tìm kiếm sách
+router.get("/search", protectRoute, async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    // Tìm kiếm theo tiêu đề và caption, không phân biệt chữ hoa/thường
+    const books = await Book.find({
+      $or: [
+        { title: { $regex: query, $options: 'i' } },
+        { caption: { $regex: query, $options: 'i' } }
+      ]
+    })
+    .populate('user', 'username profileImage')
+    .sort({ createdAt: -1 });
+
+    res.json(books);
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ message: "Error searching books" });
   }
 });
 
